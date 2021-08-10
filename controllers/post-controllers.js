@@ -21,6 +21,70 @@ const getAllPosts = async (req, res, next) => {
 
 
 
+const getAllHashTags = async (req, res, next) => {
+  let posts;
+  let hashTags = [];
+  let fullTags = []
+  try {
+    posts = await Post.find();
+  } catch (err) {
+    const error = new HttpError('Something went wrong. Could not fetch posts', 500)
+    return next(error)
+  }
+  if (posts) {
+    for(let i = 0; i < posts.length; i++) {
+      for(let j = 0; j < posts[i].hashTags.length; j++) {
+        fullTags.push(posts[i].hashTags[j])
+        if (!hashTags.includes(posts[i].hashTags[j])) {
+          hashTags.push(posts[i].hashTags[j]) }
+        }
+      }
+    }
+    res.json({ hashTags: hashTags, fullTags: fullTags})
+  }
+  
+
+
+
+
+
+
+const getPostsByHash = async (req, res, next) => {
+  const hashTag = `#${req.params.hash}`
+  let posts;
+  let hashPosts;
+  let popularPosts;
+  let recentPosts;
+  try {
+    posts = await Post.find();
+  } catch (err) {
+    const error = new HttpError('Something went wrong. Could not fetch posts', 500)
+    return next(error)
+  }
+
+  if (posts) {
+    hashPosts = posts.filter(post => post.hashTags.includes(hashTag))
+  }
+
+  popularPosts = hashPosts.sort(function(a, b) {
+    return b.likes.length - a.likes.length
+  })
+
+  recentPosts = hashPosts.sort(function(a, b) {
+    return b.date.time - a.date.time
+  })
+// possibly sort main feed this way? 
+
+
+  res.json({ 
+  posts: hashPosts.map(post => post.toObject({ getters: true})),
+  popular: popularPosts.map(post => post.toObject({ getters: true})),
+  recent: recentPosts.map(post => post.toObject({ getters: true}))
+})
+}
+
+
+
 const getPostById = async (req, res, next) => {
   const postId = req.params.pid;
 
@@ -157,6 +221,15 @@ const getPostsByUser = async (req, res, next) => {
   }
   res.json({ posts: posts.map(post => post.toObject({ getters: true})) });
 };
+
+
+
+
+const getPostActivity = async (req, res, next) => {
+  const userId = req.params.uid;
+  let posts
+  let activity = []
+}
 
 
 
@@ -343,6 +416,7 @@ const updatePostLikes = async (req, res, next) => {
       post.likes = post.likes.filter(u => u !== user)
     } else {
       post.likes = [...post.likes, user]
+      // change this to include a date so it can be put on the activity feed. 
     }
 
     try {
@@ -439,3 +513,5 @@ exports.deleteComment = deleteComment
 exports.updatePostLikes = updatePostLikes;
 exports.getFollowedPosts = getFollowedPosts;
 exports.getPostsByUserName= getPostsByUserName;
+exports.getAllHashTags= getAllHashTags;
+exports.getPostsByHash= getPostsByHash;

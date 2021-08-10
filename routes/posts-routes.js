@@ -9,6 +9,10 @@ const { check } = require('express-validator')
 
 router.get('/', postControllers.getAllPosts)
 
+router.get('/hash/:hash', postControllers.getPostsByHash)
+
+router.get('/hashtags', postControllers.getAllHashTags)
+
 router.get('/tagged/:uid', postControllers.getTaggedPosts);
 
 router.get('/followed/:uid', postControllers.getFollowedPosts)
@@ -18,7 +22,6 @@ router.get('/profile/:uid', postControllers.getPostsByUserName);
 router.get('/user/:uid', postControllers.getPostsByUser)
 
 router.get('/:pid', postControllers.getPostById)
-
 
 
 
