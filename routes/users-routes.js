@@ -9,7 +9,7 @@ const { check } = require('express-validator')
 
 router.get('/', userControllers.getAllUsers);
 ///////////////////////////////////////////////////////////////////////////////////
-
+router.get('/popular/:uid', userControllers.getPopularUsers)
 router.get('/saved/:uid', userControllers.getAllSaved);
 router.get('/profile/followers/:username', userControllers.getAllProfileFollowers)
 router.get('/profile/following/:username', userControllers.getAllProfileFollowing)
@@ -44,12 +44,7 @@ check('password').isLength({min: 6}),
 userControllers.createUser);
 
 
-// router.patch('/follower/:uid',
-// [
-//   check('myId').not().isEmpty()
-// ],
-// userControllers.updateUserFollowers)
-
+router.patch('/activity/:uid', userControllers.clearActivity)
 
 router.patch('/following/:uid',
 [

@@ -225,14 +225,6 @@ const getPostsByUser = async (req, res, next) => {
 
 
 
-const getPostActivity = async (req, res, next) => {
-  const userId = req.params.uid;
-  let posts
-  let activity = []
-}
-
-
-
 
 const createPost = async (req, res, next) => {
   const errors = validationResult(req)
@@ -353,6 +345,7 @@ const updatePostComments = async (req, res, next) => {
   const postId = req.params.pid;
   let post 
   let user
+  let postCreator
 
   const monthArray = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
   const today = new Date()
@@ -378,10 +371,28 @@ const updatePostComments = async (req, res, next) => {
   
   post.comments = [...post.comments, {id: id, user: commentor, comment: comment, userName: user.userName, date:{fullDate: today, month: month, day: day, year: year, time:codeTime, monthString: stringMonth}}]
 
+  // get user by the post ID. then add basically the same thing as the comment to the user's activity array. 
+
+  try {
+    postCreator = await User.findById(post.user)
+  } catch(err) {
+    const error = new HttpError('Could not find that user Id', 500)
+    return next(error)
+  }
+
+  postCreator.activity = [...postCreator.activity, {type: "comment", comment: comment, post: post.id, user: user.id, userName: user.userName, image: post.image, date:{fullDate: today, month: month, time:codeTime}}]
+
   try {
     await post.save();
   } catch(err) {
     const error = new HttpError('saving this comment didnt work.', 500)
+    return next(error)
+  }
+
+  try {
+    await postCreator.save();
+  } catch(err) {
+    const error = new HttpError('saving to activity feed didnt work', 500)
     return next(error)
   }
   
@@ -404,6 +415,19 @@ const updatePostLikes = async (req, res, next) => {
     const { user } = req.body;
     const postId = req.params.pid;
     let post;
+    let postCreator;
+    let commentor;
+
+    const today = new Date()
+    const month = today.getMonth() + 1
+    const codeTime = today.getTime()
+
+    try {
+      commentor = await User.findById(user)
+    } catch(err) {
+      const error = new HttpError('Could not find your user Id', 500)
+      return next(error)
+    }
 
     try {
       post = await Post.findById(postId)
@@ -412,19 +436,37 @@ const updatePostLikes = async (req, res, next) => {
       return next(error)
     }
 
+    try {
+      postCreator = await User.findById(post.user)
+    } catch(err) {
+      const error = new HttpError('Could not find that user Id', 500)
+      return next(error)
+    }
+    
     if (post.likes.includes(user)) {
       post.likes = post.likes.filter(u => u !== user)
     } else {
+      postCreator.activity = [...postCreator.activity, {type: "like", post: postId, user: commentor.id, userName: commentor.userName, image: post.image, date:{fullDate: today, month: month, time:codeTime}}]
       post.likes = [...post.likes, user]
-      // change this to include a date so it can be put on the activity feed. 
-    }
 
+    }
+    
     try {
       await post.save()
     } catch(err) {
       const error = new HttpError('Could not adjust likes on this post', 500)
       return next(error)
     }
+    
+    
+    try {
+      await postCreator.save();
+    } catch(err) {
+      const error = new HttpError('saving to activity feed didnt work', 500)
+      return next(error)
+    }
+
+
 
     res.status(200).json({message: 'Like Adjusted'})
 }

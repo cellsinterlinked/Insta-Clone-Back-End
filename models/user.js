@@ -18,7 +18,8 @@ const userSchema = new Schema({
   webSite: {type: String, required: false},
   bio: {type: String, required: false},
   phone: {type: String, required: false},
-  gender: {type: String, required: false}
+  gender: {type: String, required: false},
+  activity: {type: Array, required: false}
 
 })
 

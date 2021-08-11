@@ -19,8 +19,32 @@ const getAllUsers =  async (req, res, next) => {
 }
 
 
-//create get popular where it returns top 20 or so popular users who are 
-//not already in the user's following array. pass user id as parameter
+const getPopularUsers = async (req, res, next) => {
+  userId = req.params.uid
+  let user;
+  let users
+  let popularUsers;
+
+  try {
+    user = await User.findById(userId)
+  } catch (err) {
+    const error = new HttpError('Something went wrong', 500)
+    return next(error);
+  }
+
+  try {
+    users = await User.find({}, '-password, -email, -activity, -saves,  -phone');
+  } catch (err) {
+    const error = new HttpError('Fetching users failed', 500);
+    return next(error);
+  }
+
+  popularUsers = users.filter(p => p.id !== user.id  && !user.following.includes(p.id))
+
+  // arrange this by how many followers (the most on top)
+
+  res.json({ users: popularUsers.map(user => user.toObject({ getters: true }))})
+}
 
 
 const getAllFollowedUsers = async (req, res, next) => {
@@ -328,7 +352,7 @@ const updateUser = async (req, res, next) => {
       return next(new HttpError('Invalid inputs passed. Make sure all inputs have been filled out.', 422))
     }
 
-  const { image, webSite, bio, phone, gender } = req.body;
+  const { image, webSite, bio, phone, gender, activity } = req.body;
   const userId = req.params.uid;
   let user;
 
@@ -343,6 +367,7 @@ const updateUser = async (req, res, next) => {
   if (bio) {user.bio = bio}
   if (webSite) {user.webSite = webSite}
   if (image) {user.image = image}
+  if (activity) {user.activity = activity}
 
   try {
     await user.save();
@@ -419,6 +444,10 @@ const updateUserFollowing = async (req, res, next) => {
   let user;
   let existingUser;
 
+  const today = new Date()
+  const month = today.getMonth() + 1
+  const codeTime = today.getTime()
+
   try {
     user = await User.findById(userId)
   } catch(err) {
@@ -442,6 +471,7 @@ const updateUserFollowing = async (req, res, next) => {
     existingUser.followers = existingUser.followers.filter(u => u !== user.id)
   } else {
     user.following.push(existingUser.id)
+    existingUser.activity = [...user.activity, {type: "follow", user: user.id, userName: user.userName, date: {fullDate: today, month: month, time:codeTime} }]
     existingUser.followers.push(user.id)
   }
 
@@ -461,9 +491,33 @@ const updateUserFollowing = async (req, res, next) => {
 
 
     res.status(200).json({user: user.toObject({ getters: true })})
+  }
 
 
-}
+
+  const clearActivity = async (req, res, next) => {
+    const userId = req.params.uid
+    let user;
+
+    try {
+      user = await User.findById(userId)
+    } catch(err) {
+      const error = new HttpError('could not find user with that id', 500)
+      return next(error);
+    }
+    user.activity = []
+
+    try {
+      user.save()
+    } catch (err) {
+      const error = new HttpError('could not clear this user activity', 500)
+      return next(error)
+    }
+
+    res.status(200).json({message: 'activity cleared'})
+  }
+
+
 
 
 
@@ -509,6 +563,7 @@ const login = async (req, res, next) => { // rember logging in is for a token th
 
 exports.login = login
 exports.getAllUsers = getAllUsers;
+exports.getPopularUsers = getPopularUsers;
 exports.getUserById = getUserById;
 exports.createUser = createUser;
 exports.updateUser = updateUser;
@@ -521,3 +576,4 @@ exports.updateUserSaves = updateUserSaves;
 exports.getAllSaved = getAllSaved;
 exports.getAllProfileFollowing = getAllProfileFollowing;
 exports.getAllProfileFollowers = getAllProfileFollowers;
+exports.clearActivity = clearActivity;
