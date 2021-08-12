@@ -238,7 +238,10 @@ const getUserById = async (req, res, next) => {
     id: user.id,
     image: user.image,
     saves: user.saves,
-    name: user.name
+    name: user.name,
+    activity: user.activity
+    //this is stupid, please change this to just emit the things you dont need, moron. 
+
     
 
   }
