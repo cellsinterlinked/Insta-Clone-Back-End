@@ -46,6 +46,14 @@ userControllers.createUser);
 
 router.patch('/activity/:uid', userControllers.clearActivity)
 
+router.patch('/hashtags/:uid',
+[
+check('hashTag').not().isEmpty()
+],
+userControllers.updateUserHash
+)
+
+
 router.patch('/following/:uid',
 [
   check('otherUser').not().isEmpty(),

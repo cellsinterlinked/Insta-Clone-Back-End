@@ -239,7 +239,8 @@ const getUserById = async (req, res, next) => {
     image: user.image,
     saves: user.saves,
     name: user.name,
-    activity: user.activity
+    activity: user.activity,
+    followedHash: user.followedHash
     //this is stupid, please change this to just emit the things you dont need, moron. 
 
     
@@ -355,7 +356,7 @@ const updateUser = async (req, res, next) => {
       return next(new HttpError('Invalid inputs passed. Make sure all inputs have been filled out.', 422))
     }
 
-  const { image, webSite, bio, phone, gender, activity } = req.body;
+  const { image, webSite, bio, phone, gender, activity, followedHash } = req.body;
   const userId = req.params.uid;
   let user;
 
@@ -371,6 +372,7 @@ const updateUser = async (req, res, next) => {
   if (webSite) {user.webSite = webSite}
   if (image) {user.image = image}
   if (activity) {user.activity = activity}
+  if (followedHash) {user.followedHash = followedHash} // purely for postman purposes
 
   try {
     await user.save();
@@ -431,7 +433,38 @@ const updateUserSaves  = async (req, res, next) => {
 
 
 
+const updateUserHash = async (req, res, next) => {
+  const errors = validationResult(req)
+    if (!errors.isEmpty()) {  // if there are errors 
+      console.log(errors);
+      return next (new HttpError('Invalid inputs passed. Make sure all inputs have been filled out.', 422))
+    }
+  const userId = req.params.uid
+  const { hashTag } = req.body
+  let user;
 
+  try {
+    user = await User.findById(userId)
+  } catch(err) {
+    const error = new HttpError('could not find user with that id', 500)
+    return next(error);
+  }
+
+  if (user.followedHash.includes(hashTag)) {
+    user.followedHash = user.followedHash.filter(u => u !== hashTag)
+  } else {
+    user.followedHash = [...user.followedHash, hashTag]
+  }
+  
+  try {
+    user.save()
+  } catch (err) {
+    const error = new HttpError('could not update this list of followed users', 500)
+    return next(error)
+  }
+  res.status(200).json({user: user.toObject({ getters: true })})
+
+}
 
 
 
@@ -474,7 +507,7 @@ const updateUserFollowing = async (req, res, next) => {
     existingUser.followers = existingUser.followers.filter(u => u !== user.id)
   } else {
     user.following.push(existingUser.id)
-    existingUser.activity = [...user.activity, {type: "follow", user: user.id, userName: user.userName, date: {fullDate: today, month: month, time:codeTime} }]
+    existingUser.activity = [...existingUser.activity, {type: "follow", user: user.id, userName: user.userName, date: {fullDate: today, month: month, time:codeTime} }]
     existingUser.followers.push(user.id)
   }
 
@@ -580,3 +613,4 @@ exports.getAllSaved = getAllSaved;
 exports.getAllProfileFollowing = getAllProfileFollowing;
 exports.getAllProfileFollowers = getAllProfileFollowers;
 exports.clearActivity = clearActivity;
+exports.updateUserHash = updateUserHash;

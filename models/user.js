@@ -14,12 +14,12 @@ const userSchema = new Schema({
   conversations: [{type: mongoose.Types.ObjectId, required: true, ref: 'Convo'}],
   image: { type: String, required: false},
   saves: { type: Array, required: true},
-  // maybe add a bio? 
   webSite: {type: String, required: false},
   bio: {type: String, required: false},
   phone: {type: String, required: false},
   gender: {type: String, required: false},
-  activity: {type: Array, required: false}
+  activity: {type: Array, required: false},
+  followedHash: {type: Array, required: false}
 
 })
 
