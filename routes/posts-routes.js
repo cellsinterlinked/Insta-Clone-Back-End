@@ -6,6 +6,8 @@ const router = express.Router(); // gives us configured router to export into ap
 
 const { check } = require('express-validator')
 
+const checkAuth = require('../middleware/check-auth');
+
 
 router.get('/', postControllers.getAllPosts)
 
@@ -25,6 +27,7 @@ router.get('/:pid', postControllers.getPostById)
 
 
 
+router.use(checkAuth)
 
 router.post('/', 
 [

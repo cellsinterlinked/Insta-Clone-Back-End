@@ -5,6 +5,7 @@ const User = require('../models/user');
 const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
 const mongooseUniqueValidator = require('mongoose-unique-validator');
+const { ResultWithContext } = require('express-validator/src/chain');
 
 
 const getAllPosts = async (req, res, next) => {
@@ -490,7 +491,15 @@ const deletePost = async (req, res, next) => {
     const error = new HttpError('Could not find a post for this id', 404);
     return next(error);
   }
-
+/////////////////////////////////////////////////////////////// do this for lots of requests
+  if (post.user !== req.userData.userId) {
+    const error = new HttpError(
+      'You are not allowed to delete this post.',
+      401
+    )
+    return next(error)
+  }
+///////////////////////////////////////////////////////////////
   try {
     const sess = await mongoose.startSession();
     sess.startTransaction();
