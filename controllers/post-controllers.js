@@ -135,7 +135,7 @@ const getPostsByUserName = async (req, res, next) => {
 
   
 
-  res.json({ posts: posts.toObject( {getters: true}) });
+  // res.json({ posts: posts.toObject( {getters: true}) });
 };
 
 

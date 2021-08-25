@@ -40,7 +40,8 @@ const getPopularUsers = async (req, res, next) => {
     return next(error);
   }
 
-  popularUsers = users.filter(p => p.id !== user.id  && !user.following.includes(p.id))
+  popularUsers = users.filter(member => (member.id !== user.id  && !member.followers.includes(userId))).sort(function(a, b) {return b.followers.length - a.followers.length})
+  
 
   // arrange this by how many followers (the most on top)
 
@@ -241,7 +242,13 @@ const getUserById = async (req, res, next) => {
     saves: user.saves,
     name: user.name,
     activity: user.activity,
-    followedHash: user.followedHash
+    followedHash: user.followedHash,
+    convos: user.conversations,
+    email: user.email,
+    phone: user.phone,
+    gender: user.gender,
+    bio: user.bio,
+    webSite: user.webSite
     //this is stupid, please change this to just emit the things you dont need, moron. 
 
     
@@ -275,7 +282,7 @@ const getUserByUserName = async (req, res, next) => {
     image: user.image,
     name: user.name,
     email: user.email,
-    
+    convos: user.conversations
 
   }
 
@@ -380,7 +387,7 @@ const updateUser = async (req, res, next) => {
       return next(new HttpError('Invalid inputs passed. Make sure all inputs have been filled out.', 422))
     }
 
-  const { image, webSite, bio, phone, gender, activity, followedHash } = req.body;
+  const { image, website, bio, phone, gender, activity, followedHash, email, name, username } = req.body;
   const userId = req.params.uid;
   let user;
 
@@ -390,11 +397,14 @@ const updateUser = async (req, res, next) => {
     const error = new HttpError('Something went wrong, could not find this user', 500)
     return next(error);
   }
+  if (username) {user.userName = username}
+  if (name) {user.name = name}
   if (gender) {user.gender = gender}
   if (phone) { user.phone = phone}
   if (bio) {user.bio = bio}
-  if (webSite) {user.webSite = webSite}
+  if (website) {user.webSite = website}
   if (image) {user.image = image}
+  if (email) {user.email = email}
   if (activity) {user.activity = activity}
   if (followedHash) {user.followedHash = followedHash} // purely for postman purposes
 
