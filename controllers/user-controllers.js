@@ -366,7 +366,7 @@ let token;
 try {
   token = jwt.sign(
     {userId: createdUser.id, email: createdUser.email},
-     'supersecret_dont_share',
+     process.env.JWT_KEY,
       {expiresIn: '1h'})
     } catch (err) {
       const error = new HttpError('Creating user failed 2 ', 500)
@@ -656,7 +656,7 @@ const login = async (req, res, next) => { // rember logging in is for a token th
 try {
   token = jwt.sign(
     {userId: existingUser.id, email: existingUser.email},
-     'supersecret_dont_share',
+     process.env.JWT_KEY,
       {expiresIn: '1h'})
     } catch (err) {
       const error = new HttpError('Logging in failed', 500)

@@ -1,0 +1,9 @@
+{
+  "env": {
+    "DB_USER": "scott",
+    "DB_PASSWORD": "zealot2163",
+    "DEV_DB_NAME": "myFirstDatabase",
+    "PROD_DB_NAME": "nonurgent-production",
+    "JWT_KEY": "supersecret_dont_share"
+  }
+}
