@@ -331,7 +331,7 @@ const createUser = async (req, res, next) => {
     hashedPassword = await bcrypt.hash(password, 12);
   } catch(err) {
     const error = new HttpError(
-      'Could not create user, please try again.', 500
+      'creashed while creating hashed password', 500
     );
     return next(error)
   }
@@ -358,7 +358,7 @@ const createUser = async (req, res, next) => {
 try {
   await createdUser.save();
 } catch (err) {
-  const error = new HttpError('Creating user failed', 500)
+  const error = new HttpError('Creating user failed 1 ', 500)
   return next(error)
 }
 
@@ -369,7 +369,7 @@ try {
      'supersecret_dont_share',
       {expiresIn: '1h'})
     } catch (err) {
-      const error = new HttpError('Creating user failed', 500)
+      const error = new HttpError('Creating user failed 2 ', 500)
       return next(error)
     }
 
@@ -602,6 +602,11 @@ const deleteUser = (req, res, next) => {
 
   res.status(200).json({message: 'userDeleted'})
 }
+
+
+
+
+
 
 
 
