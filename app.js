@@ -1,12 +1,21 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+require('dotenv').config()
 
 const HttpError = require('./models/http-error');
 const convoRoutes = require('./routes/convos-routes')
 const postRoutes = require('./routes/posts-routes');
 
 const userRoutes = require('./routes/users-routes');
+const cloudinary = require('cloudinary').v2
+
+// cloudinary.config({ 
+//   cloud_name: 'dbnapmpvm', 
+//   api_key: '837353226811551', 
+//   api_secret: 'XIk-ZsEsuysSqc4NLlVEQ4-lnow',
+//   secure: true
+// });
 
 const app = express();
 

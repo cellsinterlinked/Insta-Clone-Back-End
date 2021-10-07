@@ -6,6 +6,7 @@ const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
 const mongooseUniqueValidator = require('mongoose-unique-validator');
 const { ResultWithContext } = require('express-validator/src/chain');
+const cloudinary = require('cloudinary').v2
 
 
 const getAllPosts = async (req, res, next) => {
@@ -236,7 +237,7 @@ const createPost = async (req, res, next) => {
         ) 
     }
 
-  const {image, user, description, tags, hashTags} = req.body
+  const {image, user, description, tags, hashTags, publicId} = req.body
   const monthArray = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
   const today = new Date()
   const month = today.getMonth() + 1
@@ -253,7 +254,8 @@ const createPost = async (req, res, next) => {
     likes: [],
     date: {fullDate: today, month: month, day: day, year: year, time:codeTime, monthString: stringMonth},
     hashTags,
-    tags
+    tags,
+    publicId
   })
 
   let account;
@@ -269,6 +271,19 @@ const createPost = async (req, res, next) => {
     const error = new HttpError('Could not find user for provided ID', 500)
     return next(error)
   }
+
+ try {
+   cloudinary.uploader.add_tag(user, publicId, function(error,result) {
+     console.log(`this is result ${result}, and this is error ${error}`) });
+
+ } catch(err) {
+  const error = new HttpError('Cloudinary hates you', 500)
+  return next(error)
+
+ }
+
+
+
 
   try {
     const sess = await mongoose.startSession(); // all the next 5 lines are done in this one session, if something goes wrong it roles the whole thing back. 
@@ -288,6 +303,7 @@ const createPost = async (req, res, next) => {
 
 
   res.status(201).json({post: createdPost})
+
 }
 
 
@@ -371,7 +387,7 @@ const updatePostComments = async (req, res, next) => {
   }
   
   post.comments = [...post.comments, {id: id, user: commentor, comment: comment, userName: user.userName, date:{fullDate: today, month: month, day: day, year: year, time:codeTime, monthString: stringMonth}}]
-
+  
   // get user by the post ID. then add basically the same thing as the comment to the user's activity array. 
 
   try {
@@ -387,6 +403,7 @@ const updatePostComments = async (req, res, next) => {
     await post.save();
   } catch(err) {
     const error = new HttpError('saving this comment didnt work.', 500)
+
     return next(error)
   }
 
@@ -492,14 +509,31 @@ const deletePost = async (req, res, next) => {
     return next(error);
   }
 /////////////////////////////////////////////////////////////// do this for lots of requests
-  if (post.user !== req.userData.userId) {
-    const error = new HttpError(
-      'You are not allowed to delete this post.',
-      401
-    )
-    return next(error)
-  }
+  // if (post.user !== req.userData.userId) {
+  //   const error = new HttpError(
+  //     'You are not allowed to delete this post.',
+  //     401
+  //   )
+  //   return next(error)
+  // }
 ///////////////////////////////////////////////////////////////
+
+  let publicId = post.publicId
+  try {
+    cloudinary.uploader.destroy(publicId, function(error,result) {
+      console.log(`this is result ${result}, and this is error ${error}`) });
+
+  } catch (err) {
+    const error = new HttpError(
+      'cloudinary hates you', 404
+    )
+    return next (error)
+  }
+  
+
+    
+
+//////////////////////////////////////////////////////////////
   try {
     const sess = await mongoose.startSession();
     sess.startTransaction();

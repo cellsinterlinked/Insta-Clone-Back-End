@@ -11,7 +11,8 @@ const postSchema = new Schema({
   likes: { type: Array},
   date: {type:Object},
   hashTags: { type: Array},
-  tags: { type: Array}
+  tags: { type: Array},
+  publicId: {type: String, required: true}
 })
 
 

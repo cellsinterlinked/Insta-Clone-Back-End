@@ -6,8 +6,9 @@ const Convo = require('../models/convo');
 const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
 const mongooseUniqueValidator = require('mongoose-unique-validator');
-const user = require('../models/user');
-const post = require('../models/post');
+// const user = require('../models/user');
+// const post = require('../models/post');
+const cloudinary = require('cloudinary').v2
 
 const createConvo = async (req, res, next) => {
   const errors = validationResult(req)
@@ -92,7 +93,7 @@ const sendMessage = async (req, res, next) => {
         ) 
     }
     
-  const { message, user, image } = req.body;
+  const { message, user, image, publicId } = req.body;
   const convoId = req.params.cid;
     
   let convo;
@@ -112,6 +113,20 @@ const sendMessage = async (req, res, next) => {
     const error = new HttpError('Something went wrong, cant find this convo', 500)
     return next(error);
   }
+
+  if (image) {
+    try {
+      cloudinary.uploader.add_tag([user, convoId], publicId, function(error,result) {
+        console.log(`this is result ${result}, and this is error ${error}`) });
+   
+    } catch(err) {
+     const error = new HttpError('Cloudinary hates you', 500)
+     return next(error)
+   
+    }
+ 
+  }
+
 
   convo.messages = [...convo.messages, {message: message, user: user, date: {fullDate: today, month: month, day: day, year: year, time:codeTime, monthString: stringMonth}, image:image, }]
 
@@ -152,7 +167,18 @@ const deleteConvo = async (req,res, next) => {
 
   user1 = convo.users[0];
   user2 = convo.users[1];
+////////////////////////////////////////////////////////////////////////////////////////
+  try {
+    cloudinary.api.delete_resources_by_tag(convoId, function(error,result) {
+      console.log(`this is result ${result}, and this is error ${error}`) });
 
+  } catch (err) {
+    const error = new HttpError(
+      'cloudinary hates you', 404
+    )
+    return next (error)
+  }
+/////////////////////////////////////////////////////////////////////////////////////////
   try {
     const sess = await mongoose.startSession();
     sess.startTransaction();
@@ -196,8 +222,9 @@ const getConvoById = async (req, res, next) => {
 
 const getConvosByUser = async (req, res, next) => {
   const userId = req.params.uid 
-
+  let users;
   let convos;
+  let usersArr = []
 
   try {
     convos = await Convo.find();
@@ -205,14 +232,45 @@ const getConvosByUser = async (req, res, next) => {
     const error = new HttpError('Something went wrong', 500)
     return next(error)
   }
-
   let newConvos = convos.filter(convo => convo.users.includes(userId))
 
+  try {
+    users = await User.find()
+  } catch (err) {
+    const error = new HttpError('Could not fetch users', 500)
+    return next(error)
+  }
+
+
+  for (let i = 0; i < users.length; i++) {
+    usersArr.push(users[i].id)
+  }
   if (newConvos.length === 0 || !newConvos) {
     return new HttpError('no conversations with this user tagged', 500)
   }
+  let stupidArr = []
+  let finalArr = []
+  for (let i = 0; i < newConvos.length; i++) {
+    if (usersArr.includes(newConvos[i].users[0].toString())) {
+      stupidArr.push(newConvos[i])
+    
+  } else {
+    console.log(newConvos[i].users[0], usersArr)
+  }
+}
 
-  res.json({ convos: newConvos.map(convo => convo.toObject({ getters: true }))})
+  for (let i = 0; i < stupidArr.length; i++) {
+    if (usersArr.includes(stupidArr[i].users[1].toString())) {
+      finalArr.push(stupidArr[i])
+    } else {
+      console.log(newConvos[i].users[0], usersArr)
+    }
+  }
+
+  // let filteredConvos = newConvos.filter(convo => usersArr.indexOf((convo.users[0] === true && usersArr.indexOf(convo.users[1] === true))))
+
+
+  res.json({stupid: stupidArr, users: usersArr, convos: finalArr.map(convo => convo.toObject({ getters: true }))})
 }
 
 exports.getConvoById = getConvoById

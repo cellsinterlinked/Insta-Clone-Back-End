@@ -1,9 +1,10 @@
 const HttpError = require('../models/http-error');
 const User = require('../models/user');
-const Post = require('../models/post')
+const Post = require('../models/post');
 const { validationResult } = require('express-validator')
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
+const cloudinary = require('cloudinary').v2
 
 
 const getAllUsers =  async (req, res, next) => {
@@ -53,6 +54,7 @@ const getAllFollowedUsers = async (req, res, next) => {
   userId = req.params.uid
   let user;
   let followedUsers;
+  let users;
 
   try {
     user = await User.findById(userId)
@@ -63,13 +65,27 @@ const getAllFollowedUsers = async (req, res, next) => {
   let newArr = [...user.following]
   //now that we have the user data we can tap into user.following which is an array of all the id's of the users they follow;
 
+  try {
+    users = await User.find()
+  } catch (err) {
+    const error = new HttpError('Something went wrong', 500)
+    return next(error);
+  }
+  let usersArr = []
+
+  for (let i = 0; i < users.length; i++) {
+    usersArr.push(users[i].id)
+  }
+
+  let filteredArr = newArr.filter(user => usersArr.includes(user))
+
   if (user.following.length === 0) {
     const error = new HttpError('This user is not following anyone', 500);
     return next(error)
   }
 
   try {
-    followedUsers = await User.find().where('_id').in(newArr).exec() 
+    followedUsers = await User.find().where('_id').in(filteredArr).exec() 
   } catch(err) {
     const error = new HttpError('Could not establish the list of followed users', 500)
     return next(error)
@@ -93,6 +109,7 @@ const getAllProfileFollowing = async (req, res, next) => {
   userName = req.params.username
   let user;
   let followedUsers;
+  let users
 
   try {
     user = await User.findOne({ userName: userName})
@@ -100,7 +117,23 @@ const getAllProfileFollowing = async (req, res, next) => {
     const error = new HttpError('Something went wrong', 500)
     return next(error);
   }
+
+  try {
+    users = await User.find()
+  } catch (err) {
+    const error = new HttpError('Something went wrong', 500)
+    return next(error);
+  }
+  let usersArr = []
+
+  for (let i = 0; i < users.length; i++) {
+    usersArr.push(users[i].id)
+  }
+
   let newArr = [...user.following]
+
+  let filteredArr = newArr.filter(user => usersArr.includes(user))
+ 
   //now that we have the user data we can tap into user.following which is an array of all the id's of the users they follow;
 
   if (user.following.length === 0) {
@@ -109,7 +142,7 @@ const getAllProfileFollowing = async (req, res, next) => {
   }
 
   try {
-    followedUsers = await User.find().where('_id').in(newArr).exec() 
+    followedUsers = await User.find().where('_id').in(filteredArr).exec() 
   } catch(err) {
     const error = new HttpError('Could not establish the list of followed users', 500)
     return next(error)
@@ -125,6 +158,8 @@ const getAllSaved = async (req, res, next) => {
   userId = req.params.uid
   let user;
   let saves;
+  let posts;
+
   try {
     user = await User.findById(userId)
   } catch (err) {
@@ -133,13 +168,29 @@ const getAllSaved = async (req, res, next) => {
   }
   let newArr = [...user.saves]
 
+  try {
+    posts = await Post.find()
+  } catch (err) {
+    const error = new HttpError('Could not find posts', 500);
+    return next(error)
+  }
+
+  let postsArr = []
+
+  for (let i = 0; i < posts.length; i++) {
+    postsArr.push(posts[i].id)
+  }
+
+  let filteredArr = newArr.filter(post => postsArr.includes(post))
+
+
   if (user.saves.length === 0) {
     const error = new HttpError('This user has no saves', 500);
     return next(error)
   }
 
   try {
-     saves = await Post.find().where('_id').in(newArr).exec() 
+     saves = await Post.find().where('_id').in(filteredArr).exec() 
   } catch(err) {
     const error = new HttpError('Could not establish the list of saved posts', 500)
     return next(error)
@@ -155,6 +206,7 @@ const getAllFollowing = async (req, res, next) => {
   userId = req.params.uid 
   let user;
   let followers;
+  let users;
 
   try {
     user = await User.findById(userId)
@@ -170,7 +222,21 @@ const getAllFollowing = async (req, res, next) => {
   }
 
   try {
-    followers = await User.find().where('_id').in(newArr).exec() 
+    users = await User.find()
+  } catch (err) {
+    const error = new HttpError('Something went wrong', 500)
+    return next(error);
+  }
+  let usersArr = []
+
+  for (let i = 0; i < users.length; i++) {
+    usersArr.push(users[i].id)
+  }
+
+  let filteredArr = newArr.filter(user => usersArr.includes(user))
+
+  try {
+    followers = await User.find().where('_id').in(filteredArr).exec() 
   } catch(err) {
     const error = new HttpError('Could not establish the list of followed users', 500)
     return next(error)
@@ -189,6 +255,7 @@ const getAllProfileFollowers = async (req, res, next) => {
   userName = req.params.username 
   let user;
   let followers;
+  let users;
 
   try {
     user = await User.findOne({ userName: userName })
@@ -198,13 +265,27 @@ const getAllProfileFollowers = async (req, res, next) => {
   }
   let newArr = [...user.followers]
 
+  try {
+    users = await User.find()
+  } catch (err) {
+    const error = new HttpError('Something went wrong', 500)
+    return next(error);
+  }
+  let usersArr = []
+
+  for (let i = 0; i < users.length; i++) {
+    usersArr.push(users[i].id)
+  }
+
+  let filteredArr = newArr.filter(user => usersArr.includes(user))
+
   if (user.followers.length === 0) {
     const error = new HttpError('This user is not followed by anyone', 500);
     return next(error)
   }
 
   try {
-    followers = await User.find().where('_id').in(newArr).exec() 
+    followers = await User.find().where('_id').in(filteredArr).exec() 
   } catch(err) {
     const error = new HttpError('Could not establish the list of followed users', 500)
     return next(error)
@@ -387,9 +468,10 @@ const updateUser = async (req, res, next) => {
       return next(new HttpError('Invalid inputs passed. Make sure all inputs have been filled out.', 422))
     }
 
-  const { image, website, bio, phone, gender, activity, followedHash, email, name, username } = req.body;
+  const { image, website, bio, phone, gender, activity, followedHash, email, name, username, newPublicId } = req.body;
   const userId = req.params.uid;
   let user;
+ 
 
   try {
     user = await User.findById(userId)
@@ -397,6 +479,7 @@ const updateUser = async (req, res, next) => {
     const error = new HttpError('Something went wrong, could not find this user', 500)
     return next(error);
   }
+
   if (username) {user.userName = username}
   if (name) {user.name = name}
   if (gender) {user.gender = gender}
@@ -407,6 +490,20 @@ const updateUser = async (req, res, next) => {
   if (email) {user.email = email}
   if (activity) {user.activity = activity}
   if (followedHash) {user.followedHash = followedHash} // purely for postman purposes
+
+
+  if (image) {
+    try {
+      cloudinary.uploader.add_tag(userId, newPublicId, function(error,result) {
+        console.log(`this is result ${result}, and this is error ${error}`) });
+   
+    } catch(err) {
+     const error = new HttpError('Cloudinary hates you', 500)
+     return next(error)
+   
+    }
+  }
+
 
   try {
     await user.save();
@@ -591,14 +688,57 @@ const updateUserFollowing = async (req, res, next) => {
 
 
 
-const deleteUser = (req, res, next) => {
+const deleteUser =  async (req, res, next) => {
   const userId = req.params.uid;
+  let user;
+  let posts;
 
-  if (!DUMMY_USERS.find(u => u.userId === userId)) {                    // if the user doesn't exist
-    throw new HttpError('Could not find user for that id', 404)
+
+
+  try {
+    user = await User.findById(userId)
+  } catch (err) {
+    const error = new HttpError('Could not find this user', 500)
+    return next(error)
   }
 
-  DUMMY_USERS = DUMMY_USERS.filter(u => u.id !== userId);
+  try {
+    posts = await Post.find()
+  } catch (err) {
+    const error = new HttpError('Could not find these posts', 500)
+    return next(error)
+  }
+
+  userPosts = posts.filter(post => post.id === userId)
+
+  try {
+    cloudinary.api.delete_resources_by_tag(userId, function(error,result) {
+      console.log(`this is result ${result}, and this is error ${error}`) });
+
+  } catch (err) {
+    const error = new HttpError(
+      'cloudinary hates you', 404
+    )
+    return next (error)
+  }
+
+  try {
+    await Post.deleteMany({user: userId})
+  } catch (err) {
+    const error = new HttpError('error deleting user posts', 500)
+    return next(error)
+  }
+
+  // delete convos this way? ^
+
+  try {
+    await user.remove()
+  } catch (err) {
+    const error = new HttpError(' Could not delete this user', 500)
+    return next(error)
+  }
+  
+  
 
   res.status(200).json({message: 'userDeleted'})
 }
