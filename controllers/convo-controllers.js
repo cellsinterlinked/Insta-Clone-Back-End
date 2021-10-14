@@ -8,7 +8,8 @@ const mongoose = require('mongoose');
 const mongooseUniqueValidator = require('mongoose-unique-validator');
 // const user = require('../models/user');
 // const post = require('../models/post');
-const cloudinary = require('cloudinary').v2
+const cloudinary = require('cloudinary').v2;
+const post = require('../models/post');
 
 const createConvo = async (req, res, next) => {
   const errors = validationResult(req)
@@ -31,7 +32,8 @@ const createConvo = async (req, res, next) => {
 
   const createdConvo = new Convo({
   messages: [{message: message, date: {fullDate: today, month: month, day: day, year: year, time:codeTime, monthString: stringMonth}, image: image, user: user1}],
-  users: [user1, user2]
+  users: [user1, user2],
+  notifications: {[user1]: 0, [user2]: 0 }
  })
 
  let firstUser
@@ -84,6 +86,40 @@ res.status(201).json({ convo: createdConvo.toObject({ getters: true})})
 }
 
 
+const resetNotifications = async (req, res, next) => {
+  const errors = validationResult(req)
+    if (!errors.isEmpty()) {  // if there are errors 
+      console.log(errors);
+      return next(
+        new HttpError('Invalid inputs passed. Make sure all inputs have been filled out.', 422)
+        ) 
+    }
+
+    const { user } = req.body;
+    const convoId = req.params.cid;
+    let convo;
+
+    try {
+      convo = await Convo.findById(convoId)
+    } catch(err) {
+      const error = new HttpError('Something went wrong, cant find this convo', 500)
+      return next(error);
+    }
+
+    convo.notifications = {...convo.notifications, [user]: 0 }
+
+    try {
+      await convo.save();
+    } catch(err) {
+      const error = new HttpError('sending this message did not work.', 500)
+      return next(error)
+    }
+
+    res.status(200).json({message: "Reset Successful"})
+
+}
+
+
 const sendMessage = async (req, res, next) => {
   const errors = validationResult(req)
     if (!errors.isEmpty()) {  // if there are errors 
@@ -114,6 +150,14 @@ const sendMessage = async (req, res, next) => {
     return next(error);
   }
 
+  let otherUserArray = [] 
+  for (let i = 0; i < convo.users.length; i++) {
+    if (convo.users[i].toString() !== user) {
+      otherUserArray.push(convo.users[i])
+    } 
+  }
+  let otherUser = otherUserArray[0]
+
   if (image) {
     try {
       cloudinary.uploader.add_tag([user, convoId], publicId, function(error,result) {
@@ -127,9 +171,10 @@ const sendMessage = async (req, res, next) => {
  
   }
 
-
+  
   convo.messages = [...convo.messages, {message: message, user: user, date: {fullDate: today, month: month, day: day, year: year, time:codeTime, monthString: stringMonth}, image:image, }]
-
+  convo.notifications = {...convo.notifications, [otherUser]: convo.notifications[otherUser] + 1}
+  
   try {
     await convo.save();
   } catch(err) {
@@ -137,8 +182,9 @@ const sendMessage = async (req, res, next) => {
     return next(error)
   }
 
-  res.status(200).json({convo: convo.toObject({ getters: true})})
+  res.status(200).json({this: otherUserArray, user: user, convo: convo.toObject({ getters: true})})
 }
+
 
 
 
@@ -219,6 +265,31 @@ const getConvoById = async (req, res, next) => {
 }
 
 
+const getConvoNotifications = async (req, res, next) => {
+  const userId = req.params.uid
+  let convos;
+  let notificationNum = 0
+
+  try {
+    convos = await Convo.find();
+  } catch(err) {
+    const error = new HttpError('Something went wrong', 500)
+    return next(error)
+  }
+  let newConvos = convos.filter(convo => convo.users.includes(userId))
+
+for (let i = 0; i < newConvos.length; i++) {
+  if (newConvos[i].notifications[userId] !== 0) {
+    notificationNum = notificationNum + newConvos[i].notifications[userId]
+  }
+}
+
+res.json({ number: notificationNum })
+// res.json({ text: "this is the correct route"})
+}
+
+
+
 
 const getConvosByUser = async (req, res, next) => {
   const userId = req.params.uid 
@@ -278,3 +349,5 @@ exports.getConvosByUser = getConvosByUser
 exports.createConvo = createConvo
 exports.deleteConvo = deleteConvo
 exports.sendMessage = sendMessage
+exports.resetNotifications = resetNotifications
+exports.getConvoNotifications = getConvoNotifications

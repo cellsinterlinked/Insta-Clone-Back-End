@@ -17,6 +17,8 @@ router.get('/hashtags', postControllers.getAllHashTags)
 
 router.get('/tagged/:uid', postControllers.getTaggedPosts);
 
+router.get('/taggeduser/:uid', postControllers.getTaggedPostsById)
+
 router.get('/followed/:uid', postControllers.getFollowedPosts)
 
 router.get('/profile/:uid', postControllers.getPostsByUserName);

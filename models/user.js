@@ -19,6 +19,7 @@ const userSchema = new Schema({
   phone: {type: String, required: false},
   gender: {type: String, required: false},
   activity: {type: Array, required: false},
+  activityNotifications: {type: Number, required: false},
   followedHash: {type: Array, required: false}
 
 })

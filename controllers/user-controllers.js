@@ -323,6 +323,7 @@ const getUserById = async (req, res, next) => {
     saves: user.saves,
     name: user.name,
     activity: user.activity,
+    activityNotifications: user.activityNotifications,
     followedHash: user.followedHash,
     convos: user.conversations,
     email: user.email,
@@ -363,7 +364,8 @@ const getUserByUserName = async (req, res, next) => {
     image: user.image,
     name: user.name,
     email: user.email,
-    convos: user.conversations
+    convos: user.conversations,
+    bio: user.bio
 
   }
 
@@ -427,12 +429,14 @@ const createUser = async (req, res, next) => {
     posts: [],
     saves: [],
     conversations: [],
+    activity: [],
     image,
     name,
     webSite: "",
     bio: "",
     phone: "",
-    gender: ""
+    gender: "",
+    activityNotifications: 0
 
   })
 
@@ -468,7 +472,7 @@ const updateUser = async (req, res, next) => {
       return next(new HttpError('Invalid inputs passed. Make sure all inputs have been filled out.', 422))
     }
 
-  const { image, website, bio, phone, gender, activity, followedHash, email, name, username, newPublicId } = req.body;
+  const { image, website, bio, phone, gender, activity, followedHash, email, name, username, newPublicId, activityNotifications } = req.body;
   const userId = req.params.uid;
   let user;
  
@@ -490,6 +494,7 @@ const updateUser = async (req, res, next) => {
   if (email) {user.email = email}
   if (activity) {user.activity = activity}
   if (followedHash) {user.followedHash = followedHash} // purely for postman purposes
+  if (activityNotifications) {user.activityNotifications = 0}
 
 
   if (image) {
@@ -511,7 +516,7 @@ const updateUser = async (req, res, next) => {
     const error = new HttpError('Could not update user', 500)
     return next(error);
   }
-  res.status(200).json({user: user.toObject({ getters: true })})
+  res.status(200).json({activityNotifications: activityNotifications, user: user.toObject({ getters: true })})
 }
 
 
@@ -639,6 +644,7 @@ const updateUserFollowing = async (req, res, next) => {
   } else {
     user.following.push(existingUser.id)
     existingUser.activity = [...existingUser.activity, {type: "follow", user: user.id, userName: user.userName, date: {fullDate: today, month: month, time:codeTime} }]
+    existingUser.activityNotifications = existingUser.activityNotifications + 1
     existingUser.followers.push(user.id)
   }
 
