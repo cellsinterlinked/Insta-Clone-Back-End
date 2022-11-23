@@ -375,8 +375,8 @@ const getUserByUserName = async (req, res, next) => {
 
 const createUser = async (req, res, next) => {
   const errors = validationResult(req)
-    if (!errors.isEmpty()) {  // if there are errors 
-      console.log(errors);
+    if (!errors.isEmpty()) {  
+   
       return next(
         new HttpError('Invalid inputs passed. Make sure all inputs have been filled out.', 422)
         ) 
@@ -467,8 +467,8 @@ res.status(201).json({userId: createdUser.id, email: createdUser.email, token: t
 
 const updateUser = async (req, res, next) => {
   const errors = validationResult(req)
-    if (!errors.isEmpty()) {  // if there are errors 
-      console.log(errors);
+    if (!errors.isEmpty()) {  
+  
       return next(new HttpError('Invalid inputs passed. Make sure all inputs have been filled out.', 422))
     }
 
@@ -500,7 +500,7 @@ const updateUser = async (req, res, next) => {
   if (image) {
     try {
       cloudinary.uploader.add_tag(userId, newPublicId, function(error,result) {
-        console.log(`this is result ${result}, and this is error ${error}`) });
+       });
    
     } catch(err) {
      const error = new HttpError('Cloudinary hates you', 500)
@@ -523,8 +523,8 @@ const updateUser = async (req, res, next) => {
 
 const updateUserSaves  = async (req, res, next) => {
   const errors = validationResult(req)
-    if (!errors.isEmpty()) {  // if there are errors 
-      console.log(errors);
+    if (!errors.isEmpty()) {  
+  
       return next (new HttpError('Invalid inputs passed. Make sure all inputs have been filled out.', 422))
     }
 
@@ -571,8 +571,8 @@ const updateUserSaves  = async (req, res, next) => {
 
 const updateUserHash = async (req, res, next) => {
   const errors = validationResult(req)
-    if (!errors.isEmpty()) {  // if there are errors 
-      console.log(errors);
+    if (!errors.isEmpty()) {  
+    
       return next (new HttpError('Invalid inputs passed. Make sure all inputs have been filled out.', 422))
     }
   const userId = req.params.uid
@@ -606,8 +606,8 @@ const updateUserHash = async (req, res, next) => {
 
 const updateUserFollowing = async (req, res, next) => {
   const errors = validationResult(req)
-    if (!errors.isEmpty()) {  // if there are errors 
-      console.log(errors);
+    if (!errors.isEmpty()) {  
+  
       return next (new HttpError('Invalid inputs passed. Make sure all inputs have been filled out.', 422))
     }
 
@@ -719,7 +719,7 @@ const deleteUser =  async (req, res, next) => {
 
   try {
     cloudinary.api.delete_resources_by_tag(userId, function(error,result) {
-      console.log(`this is result ${result}, and this is error ${error}`) });
+      });
 
   } catch (err) {
     const error = new HttpError(
@@ -758,8 +758,8 @@ const deleteUser =  async (req, res, next) => {
 
 const login = async (req, res, next) => { // rember logging in is for a token that will get sent to the browser
   const errors = validationResult(req)
-    if (!errors.isEmpty()) {  // if there are errors 
-      console.log(errors);
+    if (!errors.isEmpty()) {  
+  
       return next( new HttpError('Invalid inputs passed. Make sure all inputs have been filled out.', 422))
     }
   const {email, password} = req.body;

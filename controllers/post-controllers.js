@@ -221,6 +221,8 @@ const getFollowedPosts = async (req, res, next) => {
     return next(error);
   }
 
+  posts.sort((a, b) => b.date.time - a.date.time)
+
   res.json({ posts: posts.map((post) => post.toObject({ getters: true })) });
 };
 
@@ -251,8 +253,7 @@ const getPostsByUser = async (req, res, next) => {
 const createPost = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    // if there are errors
-    console.log(errors);
+  
     return next(
       new HttpError(
         'Invalid inputs passed. Make sure all inputs have been filled out.',
@@ -318,7 +319,7 @@ const createPost = async (req, res, next) => {
 
   try {
     cloudinary.uploader.add_tag(user, publicId, function (error, result) {
-      console.log(`this is result ${result}, and this is error ${error}`);
+    
     });
   } catch (err) {
     const error = new HttpError('Cloudinary hates you', 500);
@@ -386,8 +387,7 @@ const createPost = async (req, res, next) => {
 const updatePost = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    // if there are errors
-    console.log(errors);
+  
     return next(
       new HttpError(
         'Invalid inputs passed. Make sure all inputs have been filled out.',
@@ -427,8 +427,8 @@ const updatePost = async (req, res, next) => {
 const updatePostComments = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    // if there are errors
-    console.log(errors);
+  
+  
     return next(
       new HttpError(
         'Invalid inputs passed. Make sure all inputs have been filled out.',
@@ -545,8 +545,7 @@ const updatePostComments = async (req, res, next) => {
 const updatePostLikes = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    // if there are errors
-    console.log(errors);
+  
     return next(
       new HttpError(
         'Invalid inputs passed. Make sure all inputs have been filled out.',
@@ -647,7 +646,7 @@ const deletePost = async (req, res, next) => {
   let publicId = post.publicId;
   try {
     cloudinary.uploader.destroy(publicId, function (error, result) {
-      console.log(`this is result ${result}, and this is error ${error}`);
+    
     });
   } catch (err) {
     const error = new HttpError('cloudinary hates you', 404);
@@ -673,8 +672,7 @@ const deletePost = async (req, res, next) => {
 const deleteComment = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    // if there are errors
-    console.log(errors);
+ 
     return next(
       new HttpError(
         'Invalid inputs passed. Make sure all inputs have been filled out.',

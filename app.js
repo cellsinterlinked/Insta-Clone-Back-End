@@ -50,7 +50,7 @@ app.use((error, req, res, next) => {
 })
 
 mongoose
-  .connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster1.zszej.mongodb.net/${process.env.DEV_DB_NAME}?retryWrites=true&w=majority`)
+  .connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster1.zszej.mongodb.net/${process.env.DEV_DB_NAME}?retryWrites=true&w=majority`, { useNewUrlParser: true })
   .then(() => {       // if server successfully connected to database, app.listen(5000)
     app.listen(process.env.PORT || 5000);
   })

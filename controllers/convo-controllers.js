@@ -14,7 +14,7 @@ const post = require('../models/post');
 const createConvo = async (req, res, next) => {
   const errors = validationResult(req)
     if (!errors.isEmpty()) {  // if there are errors 
-      console.log(errors);
+      
       return next(
         new HttpError('Invalid inputs passed. Make sure all inputs have been filled out.', 422)
         ) 
@@ -89,7 +89,7 @@ res.status(201).json({ convo: createdConvo.toObject({ getters: true})})
 const resetNotifications = async (req, res, next) => {
   const errors = validationResult(req)
     if (!errors.isEmpty()) {  // if there are errors 
-      console.log(errors);
+  
       return next(
         new HttpError('Invalid inputs passed. Make sure all inputs have been filled out.', 422)
         ) 
@@ -123,7 +123,7 @@ const resetNotifications = async (req, res, next) => {
 const sendMessage = async (req, res, next) => {
   const errors = validationResult(req)
     if (!errors.isEmpty()) {  // if there are errors 
-      console.log(errors);
+    
       return next(
         new HttpError('Invalid inputs passed. Make sure all inputs have been filled out.', 422)
         ) 
@@ -161,7 +161,7 @@ const sendMessage = async (req, res, next) => {
   if (image) {
     try {
       cloudinary.uploader.add_tag([user, convoId], publicId, function(error,result) {
-        console.log(`this is result ${result}, and this is error ${error}`) });
+      });
    
     } catch(err) {
      const error = new HttpError('Cloudinary hates you', 500)
@@ -203,8 +203,7 @@ const deleteConvo = async (req,res, next) => {
     return next(error)
   }
 
-  console.log(convo)
-  console.log(convo.users)
+  
 
   if (!convo) {
     const error = new HttpError('Could not find a convo for this ID', 404)
@@ -216,7 +215,7 @@ const deleteConvo = async (req,res, next) => {
 ////////////////////////////////////////////////////////////////////////////////////////
   try {
     cloudinary.api.delete_resources_by_tag(convoId, function(error,result) {
-      console.log(`this is result ${result}, and this is error ${error}`) });
+      });
 
   } catch (err) {
     const error = new HttpError(
@@ -325,17 +324,13 @@ const getConvosByUser = async (req, res, next) => {
     if (usersArr.includes(newConvos[i].users[0].toString())) {
       stupidArr.push(newConvos[i])
     
-  } else {
-    console.log(newConvos[i].users[0], usersArr)
-  }
+  } 
 }
 
   for (let i = 0; i < stupidArr.length; i++) {
     if (usersArr.includes(stupidArr[i].users[1].toString())) {
       finalArr.push(stupidArr[i])
-    } else {
-      console.log(newConvos[i].users[0], usersArr)
-    }
+    } 
   }
 
   // let filteredConvos = newConvos.filter(convo => usersArr.indexOf((convo.users[0] === true && usersArr.indexOf(convo.users[1] === true))))
